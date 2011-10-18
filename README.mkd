@@ -18,7 +18,7 @@ brainer.
 It is also designed form the ground up to work with Ruby 1.9.  This is because
 Ruby 1.9 handles text encodings much more magically than Ruby 1.8.x and so
 these features have been taken full advantage of in this library allowing
-Mail to handle a lot more messages more cleanly than TMail.  Mail does run on
+Mail to handle a lot more messages more cleanly than TMail. Mail does run on
 Ruby 1.8.x... it's just not as fun to code.
 
 Finally, Mail has been designed with a very simple object oriented system
