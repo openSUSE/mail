@@ -139,7 +139,7 @@ module Mail
         line = ""
         while !words.empty?
           break unless word = words.first.dup
-          word.encode!(charset) if defined?(Encoding) && charset
+          word.encode!(charset) if RUBY_VERSION >= '1.9' && defined?(Encoding) && charset
           word = encode(word) if should_encode
           word = encode_crlf(word)
           # Skip to next line if we're going to go past the limit
@@ -165,11 +165,7 @@ module Mail
     end
  
     def encode(value)
-      value.encode!(charset) if charset && value.respond_to?(:encode!)
-      (value.not_ascii_only? ? [value].pack("M").gsub("=\n", '') : value).gsub("\r", "=0D").gsub("\n", "=0A")
-    end
-
-    def encoded_word_safify!(value)
+      value = [value].pack("M").gsub("=\n", '')
       value.gsub!(/"/,  '=22')
       value.gsub!(/\(/, '=28')
       value.gsub!(/\)/, '=29')

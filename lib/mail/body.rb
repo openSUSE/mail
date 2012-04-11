@@ -163,7 +163,7 @@ module Mail
             # Decode then encode to normalize and allow transforming 
             # from base64 to Q-P and vice versa
             decoded = dec.decode(raw_source)
-            if defined?(Encoding) && charset && charset != "US-ASCII"
+            if RUBY_VERSION >= '1.9' && defined?(Encoding) && charset && charset != "US-ASCII"
               decoded.encode!(charset)
               decoded.force_encoding('BINARY') unless Encoding.find(charset).ascii_compatible?
             end
