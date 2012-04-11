@@ -1,4 +1,56 @@
-== Tue Apr 26 09:59:56 UTC 2011 Mikel Lindsaar <mikel@rubyx.com>
+== HEAD
+
+* Fixes #349 an inverted condition on imap open read_only
+* Remove duplicated line feed from regexp
+* Remove unused variable
+
+== Version 2.4.4 - Wed Mar 14 22:44:00 +1100 2012 Mikel Lindsaar <mikel@reinteractive.net>
+
+* Fix security vulnerability allowing command line exploit when using file delivery method
+
+== Version 2.4.3 - Tue Mar 6 19:38:00 UTC 2012 Mikel Lindsaar <mikel@reinteractive.net>
+
+* Fix security vulnerability allowing command line exploit when using exim or sendmail from the command line
+* Change Mail#deliver! to also inform the interceptors
+* Encodings.value_decode(str): Treat lines with mixed encoding correctly when the line ends with a plain text part.
+
+== Version 2.4.1 - Thu Jan 19 13:49:34 UTC 2012 Mikel Lindsaar <mikel@reinteractive.net>
+
+* Fix non ascii character folding problems
+* Handle multipart mail in Mail::Message#to_yaml / #from_yaml
+* More warning fixes
+* Normalize the Parse Error class and messages
+* Fix for Mail::Encodings.unquote_and_convert not handling unquoted characters mixed in between quoted strings
+* Updated treetop to latest version, specs now run approximately 25-30% faster!
+* Version bump to 2.4.1 and gem release
+
+== Version 2.4.0 - Sun Jan 15 18:15:56 UTC 2011 Mikel Lindsaar <mikel@reinteractive.net>
+
+* Speed up reading of messages by about 12x
+* Added Message#without_attachments! that removes all message's attachments
+* Added shoulda-style RSpec matchers
+* Added support for @ in display name
+* Added support for the :tls and :ssl options
+* Added UTF-16 and UTF-32 support
+* Added Exim as it's own delivery manager
+* Added Ruby 1.9.3 compatibility
+* Fix for Sendmail return-path escaping
+* Fix for alias for SJIS was changed from shift_jis to windows-31J in Ruby 1.9.3
+* Fix for undefined method 'constantize' error when no ActiveSupport loaded
+* Fix Mail::Field#== comparison
+* Fixed Regexp warning: character class has duplicated range
+* Fixed encoding non-latin names in addresses
+* Fixed issue with non-7bit attachment filenames
+* Now define String#blank? only if not defined yet
+* Decoding text parts using charset from Content-Type field
+* Per RFC 5322, do not accept emails with consecutive dots
+* Bunch of bug fixes from contributed pull requests
+* Travis CI setup and passing on 6 rubies
+* Upgrade RSpec to 2.8.0
+* Lots of warnings fixed
+* Version bump to 2.4.0 and gem release
+
+== Version 2.3.0 - Tue Apr 26 09:59:56 UTC 2011 Mikel Lindsaar <mikel@rubyx.com>
 
 * Remove ActiveSupport from the dependencies, load Active Support if present, or use internals if not
 * Created v2.2 branch for all 2.2 related commits

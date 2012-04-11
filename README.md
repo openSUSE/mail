@@ -25,16 +25,31 @@ Finally, Mail has been designed with a very simple object oriented system
 that really opens up the email messages you are parsing, if you know what
 you are doing, you can fiddle with every last bit of your email directly.
 
+Donations
+-------------
+
+Mail has been downloaded millions of times, by people around the world, in fact,
+it represents more than 1% of *all* gems downloaded.  
+
+It is (like all open source software) a labour of love and something I am doing
+with my own free time.  If you would like to say thanks, please feel free to
+[make a donation](http://www.pledgie.com/campaigns/8790) and feel free to send
+me a nice email :)
+
+<a href='http://www.pledgie.com/campaigns/8790'><img alt='Click here to lend your support to: mail and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/8790.png?skin_name=chrome' border='0' /></a>
+
+
 Compatibility
 -------------
 
-Mail is tested and works on the following platforms:
+Mail is tested by Travis (![Travis Build Status](https://secure.travis-ci.org/mikel/mail.png "Build Status")) and works on the following platforms:
 
-* jruby-1.5.2 [ x86\_64-java ]
-* ree-1.8.7-2010.02 [ x86\_64 ]
-* ruby-1.8.6-p399 [ x86\_64 ]
-* ruby-1.8.7-p302 [ x86\_64 ]
-* ruby-1.9.2-p0 [ x86\_64 ]
+* jruby-1.6.5.1 [ x86_64 ]
+* rbx-head-d18 [ x86_64 ]
+* ree-1.8.7-2011.03 [ i686 ]
+* ruby-1.8.7-p357 [ i686 ]
+* ruby-1.9.2-p290 [ x86_64 ]
+* ruby-1.9.3-p0 [ x86_64 ]
 
 Discussion
 ----------
@@ -89,7 +104,7 @@ It also means you can be sure Mail will behave correctly.
 API Policy
 ----------
 
-No API removals within a single point release.  All removals to be depreciated with
+No API removals within a single point release.  All removals to be deprecated with
 warnings for at least one MINOR point release before removal.
 
 Also, all private or protected methods to be declared as such - though this is still I/P.
@@ -137,16 +152,7 @@ I have tried to simplify it some:
 Contributing
 ------------
 
-Please do!  Contributing is easy in Mail:
-
-1. Check the Reference RFCs, they are in the References directory, so no excuses.
-2. Open a ticket on GitHub, maybe someone else has the problem too
-3. Make a fork of my GitHub repository
-4. Make a spec driven change to the code base
-5. Make sure it works and all specs pass, on Ruby versions 1.8.6, 1.8.7 and 1.9
-6. Update the README if needed to reflect your change / addition
-7. With all specs passing push your changes back to your fork
-8. Send me a pull request
+Please do!  Contributing is easy in Mail.  Please read the CONTRIBUTING.md document for more info
 
 Usage
 -----
@@ -258,6 +264,14 @@ mail.delivery_method :sendmail
 mail.deliver
 ```
 
+Exim requires it's own delivery manager, and can be used like so:
+
+```ruby
+mail.delivery_method :exim, :location => "/usr/bin/exim"
+
+mail.deliver
+```
+
 ### Getting emails from a pop server:
 
 You can configure Mail to receive email using <code>retriever_method</code>
@@ -337,6 +351,22 @@ is another message which can have many or no parts.
 A message will only have parts if it is a multipart/mixed or related/mixed
 content type and has a boundary defined.
 
+### Testing and extracting attachments
+```ruby
+mail.attachments.each do | attachment |
+  # Attachments is an AttachmentsList object containing a
+  # number of Part objects
+  if (attachment.content_type.start_with?('image/'))
+    # extracting images for example...
+    filename = attachment.filename
+    begin
+      File.open(images_dir + filename, "w+b", 0644) {|f| f.write attachment.body.decoded}
+    rescue Exception => e
+      puts "Unable to save data for #{filename} because #{e.message}"
+    end
+  end
+end
+```
 ### Writing and sending a multipart/alternative (html and text) email
 
 Mail makes some basic assumptions and makes doing the common thing as
@@ -506,6 +536,7 @@ end
 @round_tripped_mail.attachments.length #=> 1
 @round_tripped_mail.attachments.first.filename #=> 'myfile.pdf'
 ```
+See "Testing and extracting attachments" above for more details.
 
 Using Mail with Testing or Spec'ing Libraries
 ---------------------------------------------
@@ -537,6 +568,55 @@ Mail::TestMailer.deliveries.clear
 => []
 ```
 
+There is also a set of RSpec matchers stolen fr^H^H^H^H^H^H^H^H inspired by Shoulda's ActionMailer matchers (you'll want to set <code>delivery_method</code> as above too):
+
+```
+Mail.defaults do
+  delivery_method :test # in practice you'd do this in spec_helper.rb
+end
+
+describe "sending an email" do
+  include Mail::Matchers
+
+  before(:each) do
+    Mail::TestMailer.deliveries.clear
+
+    Mail.deliver do
+      to ['mikel@me.com', 'mike2@me.com']
+      from 'you@you.com'
+      subject 'testing'
+      body 'hello'
+    end
+  end
+
+  it { should have_sent_email } # passes if any email at all was sent
+
+  it { should have_sent_email.from('you@you.com') }
+  it { should have_sent_email.to('mike1@me.com') }
+
+  # can specify a list of recipients...
+  it { should have_sent_email.to(['mike1@me.com', 'mike2@me.com']) }
+
+  # ...or chain recipients together
+  it { should have_sent_email.to('mike1@me.com').to('mike2@me.com') }
+
+  it { should have_sent_email.with_subject('testing') }
+
+  it { should have_sent_email.with_body('hello') }
+
+  # Can match subject or body with a regex
+  # (or anything that responds_to? :match)
+
+  it { should have_sent_email.matching_subject(/test(ing)?/) }
+  it { should have_sent_email.matching_body(/h(a|e)llo/) }
+
+  # Can chain together modifiers
+  # Note that apart from recipients, repeating a modifier overwrites old value.
+
+  it { should have_sent_email.from('you@you.com').to('mike1@me.com').matching_body(/hell/)
+end
+```
+
 Excerpts from TREC Spam Corpus 2005
 -----------------------------------
 
@@ -561,7 +641,7 @@ License
 
 (The MIT License)
 
-Copyright (c) 2009, 2010, 2011
+Copyright (c) 2009, 2010, 2011, 2012
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

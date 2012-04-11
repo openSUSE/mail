@@ -42,6 +42,14 @@ module Mail
     # Raised when a parsing error has occurred (ie, a StructuredField has tried
     # to parse a field that is invalid or improperly written)
     class ParseError < FieldError #:nodoc:
+      attr_accessor :element, :value, :reason
+
+      def initialize(element, value, reason)
+        @element = element
+        @value = value
+        @reason = reason
+        super("#{element} can not parse |#{value}|\nReason was: #{reason}")
+      end
     end
 
     # Raised when attempting to set a structured field's contents to an invalid syntax
@@ -112,6 +120,8 @@ module Mail
     def same( other )
       match_to_s(other.name, field.name)
     end
+    
+    alias_method :==, :same
     
     def <=>( other )
       self_order = FIELD_ORDER.rindex(self.name.to_s.downcase) || 100

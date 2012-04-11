@@ -13,7 +13,10 @@ describe "SMTP Delivery Method" do
                                :password             => nil,
                                :authentication       => nil,
                                :enable_starttls_auto => true,
-                               :openssl_verify_mode  => nil }
+                               :openssl_verify_mode  => nil,
+                               :tls                  => nil,
+                               :ssl                  => nil
+                                }
     end
     MockSMTP.clear_deliveries
   end
@@ -28,9 +31,9 @@ describe "SMTP Delivery Method" do
         subject 'invalid RFC2822'
       end
 
-      MockSMTP.deliveries[0][0].should == mail.encoded
-      MockSMTP.deliveries[0][1].should == mail.from[0]
-      MockSMTP.deliveries[0][2].should == mail.destinations
+      MockSMTP.deliveries[0][0].should eq mail.encoded
+      MockSMTP.deliveries[0][1].should eq mail.from[0]
+      MockSMTP.deliveries[0][2].should eq mail.destinations
     end
 
     it "should be able to send itself" do
@@ -42,9 +45,9 @@ describe "SMTP Delivery Method" do
 
       mail.deliver!
 
-      MockSMTP.deliveries[0][0].should == mail.encoded
-      MockSMTP.deliveries[0][1].should == mail.from[0]
-      MockSMTP.deliveries[0][2].should == mail.destinations
+      MockSMTP.deliveries[0][0].should eq mail.encoded
+      MockSMTP.deliveries[0][1].should eq mail.from[0]
+      MockSMTP.deliveries[0][2].should eq mail.destinations
     end
     
     it "should be able to return actual SMTP protocol response" do
@@ -59,7 +62,7 @@ describe "SMTP Delivery Method" do
       end
       
       response = mail.deliver!
-      response.should eql 'OK'
+      response.should eq 'OK'
       
     end
   end
@@ -106,10 +109,51 @@ describe "SMTP Delivery Method" do
     end
   end
   
+  describe "enabling ssl" do
+    def redefine_verify_none(new_value)
+      OpenSSL::SSL.send(:remove_const, :VERIFY_NONE)
+      OpenSSL::SSL.send(:const_set, :VERIFY_NONE, new_value)
+    end
+    
+    it "should use OpenSSL::SSL::VERIFY_NONE if a context" do
+
+      # config can't be setup until redefined
+      redefine_verify_none(OpenSSL::SSL::SSLContext.new)
+      Mail.defaults do
+        delivery_method :smtp, :address => 'smtp.mockup.com', :port => 587, :tls => true
+      end
+
+      mail = Mail.deliver do
+        from    'roger@moore.com'
+        to      'marcel@amont.com'
+        subject 'invalid RFC2822'
+      end
+
+      doing { mail.deliver! }.should_not raise_error(TypeError)
+    end
+    
+    it "should ignore OpenSSL::SSL::VERIFY_NONE if it is 0" do
+
+      # config can't be setup until redefined
+      redefine_verify_none(0)
+      Mail.defaults do
+        delivery_method :smtp, :address => 'smtp.mockup.com', :port => 587, :tls => true
+      end
+
+      mail = Mail.deliver do
+        from    'roger@moore.com'
+        to      'marcel@amont.com'
+        subject 'invalid RFC2822'
+      end
+
+      doing { mail.deliver! }.should_not raise_error(TypeError)
+    end
+  end
+  
   describe "return path" do
 
     it "should use the return path if specified" do
-      mail = Mail.deliver do
+      Mail.deliver do
         to "to@someemail.com"
         from "from@someemail.com"
         sender "sender@test.lindsaar.net"
@@ -118,11 +162,11 @@ describe "SMTP Delivery Method" do
         message_id "<1234@someemail.com>"
         body "body"
       end
-      MockSMTP.deliveries[0][1].should == "bounce@someemail.com"
+      MockSMTP.deliveries[0][1].should eq "bounce@someemail.com"
     end
 
     it "should use the sender address is no return path is specified" do
-      mail = Mail.deliver do
+      Mail.deliver do
         to "to@someemail.com"
         from "from@someemail.com"
         sender "sender@test.lindsaar.net"
@@ -130,18 +174,18 @@ describe "SMTP Delivery Method" do
         message_id "<1234@someemail.com>"
         body "body"
       end
-      MockSMTP.deliveries[0][1].should == "sender@test.lindsaar.net"
+      MockSMTP.deliveries[0][1].should eq "sender@test.lindsaar.net"
     end
     
     it "should use the from address is no return path or sender is specified" do
-      mail = Mail.deliver do
+      Mail.deliver do
         to "to@someemail.com"
         from "from@someemail.com"
         subject "Can't set the return-path"
         message_id "<1234@someemail.com>"
         body "body"
       end
-      MockSMTP.deliveries[0][1].should == "from@someemail.com"
+      MockSMTP.deliveries[0][1].should eq "from@someemail.com"
     end
     
   end

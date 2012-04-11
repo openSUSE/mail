@@ -39,7 +39,7 @@ describe "SMTP Delivery Method" do
       
       delivery = File.join(Mail.delivery_method.settings[:location], 'marcel@amont.com')
       
-      File.read(delivery).should == mail.encoded
+      File.read(delivery).should eq mail.encoded
     end
 
     it "should send multiple emails to multiple files" do
@@ -56,8 +56,8 @@ describe "SMTP Delivery Method" do
       delivery_one = File.join(Mail.delivery_method.settings[:location], 'marcel@amont.com')
       delivery_two = File.join(Mail.delivery_method.settings[:location], 'bob@me.com')
       
-      File.read(delivery_one).should == mail.encoded
-      File.read(delivery_two).should == mail.encoded
+      File.read(delivery_one).should eq mail.encoded
+      File.read(delivery_two).should eq mail.encoded
     end
 
     it "should only create files based on the addr_spec of the destination" do
@@ -65,12 +65,27 @@ describe "SMTP Delivery Method" do
         delivery_method :file, :location => tmpdir
       end
       
-      mail = Mail.deliver do
+      Mail.deliver do
         from    'roger@moore.com'
         to      '"Long, stupid email address" <mikel@test.lindsaar.net>'
         subject 'invalid RFC2822'
       end
       delivery = File.join(Mail.delivery_method.settings[:location], 'mikel@test.lindsaar.net')
+      File.exists?(delivery).should be_true
+    end
+
+    it "should use the base name of the file name to prevent file system traversal" do
+      Mail.defaults do
+        delivery_method :file, :location => tmpdir
+      end
+      
+      Mail.deliver do
+        from    'roger@moore.com'
+        to      '../../../../../../../../../../../tmp/pwn'
+        subject 'evil hacker'
+      end
+
+      delivery = File.join(Mail.delivery_method.settings[:location], 'pwn')
       File.exists?(delivery).should be_true
     end
 
